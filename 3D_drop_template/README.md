@@ -1,7 +1,7 @@
-# Bidimensional drop simulation
+# Tridimensional drop simulation
 
 ## Description
-This folder constitutes a template for setting up a bidimensional OpenFOAM simulation to evaluate the breakup of a suspended drop under the influence of ax external imposed flow field.
+This folder constitutes a template for setting up a tridimensional OpenFOAM simulation to evaluate the breakup of a suspended drop under the influence of ax external imposed flow field.
 The simulation uses the Volume Of Fluid (VOF) technique, implemented through the solver `interFoam`, shipped with OpenFOAM.
 
 ## Case creation
