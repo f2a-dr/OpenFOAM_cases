@@ -1,0 +1,9 @@
+#!/bin/bash
+
+postProcess -func strainRate > sim_logs/log.strainRate 2>&1 &
+postProcess -func vorticity
+postProcess -func mixingIndex > sim_logs/log.mixingIndex 2>&1 &
+#postProcess -func "grad(U)"
+#postProcess -func "components(grad(U))"
+#notify-send -u critical "Postprocessing completed in $(echo $(pwd))"
+#wall "Postprocessing completed in $(echo $(pwd))"

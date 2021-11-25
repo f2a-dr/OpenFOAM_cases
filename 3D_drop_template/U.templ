@@ -1,0 +1,371 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    version     2.0;
+    format      ascii;
+    class       volVectorField;
+    location    "0";
+    object      U;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+#include "$FOAM_CASE/input"
+
+dimensions      [0 1 -1 0 0 0 0];
+
+internalField   nonuniform List<vector> 
+numerocelleinterne
+(
+//insert here
+)
+;
+
+boundaryField
+{
+    east
+    {
+	type		codedFixedValue;
+	value		uniform (0 0 0);
+
+	name	eastProfile;
+
+	codeInclude
+	#{
+		#include "percorsodelcaso/input"
+		#include "fvCFD.H"
+		#include "fvMesh.H"
+		//#include "setRootCase.H"
+		//#include "createTime.H"
+		//#include "createMesh.H"
+	#};
+
+	codeOptions
+	#{
+    		-I$(LIB_SRC)/finiteVolume/lnInclude \
+    		-I$(LIB_SRC)/meshTools/lnInclude
+	#};
+
+	codeLibs
+	#{
+    		-lfiniteVolume \
+    		-lmeshTools
+	#};
+
+	code
+	#{
+		// This part calculate the centre of mass of the droplet
+		const volScalarField& alpha(db().objectRegistry::lookupObject<volScalarField>("alpha.water"));
+		// We don't have direct access to the mesh, so we use a workaround calling it from the field 
+		// alpha
+		const fvMesh& mesh(alpha.mesh());
+		const scalar& cellsNum(mesh.C().size());
+		const volVectorField& centres(mesh.C());
+		const volScalarField xCoord(centres.component(0/*vector::X*/));
+		const volScalarField yCoord(mesh.C().component(vector::Y));
+		const volScalarField zCoord(mesh.C().component(vector::Z));
+
+        	scalar denominator(0.), numeratorX(0.), numeratorY(0.), numeratorZ(0.), COMX, COMY, COMZ;
+
+		for (label cellI = 0; cellI < cellsNum; cellI++){
+	    		numeratorX += (1 - alpha[cellI]) * xCoord[cellI];
+	    		numeratorY += (1 - alpha[cellI]) * yCoord[cellI];
+	    		numeratorZ += (1 - alpha[cellI]) * zCoord[cellI];
+	    		denominator += (1 - alpha[cellI]);
+		}
+
+		// reduce for parallel running
+		reduce(numeratorX, sumOp<scalar>());
+		reduce(numeratorY, sumOp<scalar>());
+		reduce(numeratorZ, sumOp<scalar>());
+		reduce(denominator, sumOp<scalar>());
+
+		COMX = numeratorX/denominator;
+		COMY = numeratorY/denominator;
+		COMZ = numeratorZ/denominator;
+
+		// This part calculates the value of the U field on the boundary
+		const fvPatch& boundaryPatch = patch();
+		const vectorField& Cf = boundaryPatch.Cf();
+		vectorField& field = *this;
+
+		const scalar Gdot = gdot; // value of the shear rate
+		const scalar Beta = beta; // value linked to the mixing index
+		const scalar L = 0.005; // value of the half-lenght of the domain
+
+		forAll(Cf, faceI)
+		{
+			const scalar x = Cf[faceI][0]; // .x();
+			const scalar y = Cf[faceI][1]; // .y();
+			const scalar z = Cf[faceI][2]; // .z();
+
+			field[faceI] = vector( Gdot*Beta*(y-COMY), (x-COMX)*Gdot, 0);
+		}
+
+		//operator == (field);
+		
+	#};
+    }
+
+    west
+    {
+	type		codedFixedValue;
+	value		uniform (0 0 0);
+
+	name	westProfile;
+
+	codeInclude
+	#{
+		#include "percorsodelcaso/input"
+		#include "fvCFD.H"
+		#include "fvMesh.H"
+		//#include "setRootCase.H"
+		//#include "createTime.H"
+		//#include "createMesh.H"
+	#};
+
+	codeOptions
+	#{
+    		-I$(LIB_SRC)/finiteVolume/lnInclude \
+    		-I$(LIB_SRC)/meshTools/lnInclude
+	#};
+
+	codeLibs
+	#{
+    		-lfiniteVolume \
+    		-lmeshTools
+	#};
+
+	code
+	#{
+		// This part calculate the centre of mass of the droplet
+		const volScalarField& alpha(db().objectRegistry::lookupObject<volScalarField>("alpha.water"));
+		// We don't have direct access to the mesh, so we use a workaround calling it from the field 
+		// alpha
+		const fvMesh& mesh(alpha.mesh());
+		const scalar& cellsNum(mesh.C().size());
+		const volScalarField xCoord(mesh.C().component(vector::X));
+		const volScalarField yCoord(mesh.C().component(vector::Y));
+		const volScalarField zCoord(mesh.C().component(vector::Z));
+
+        	scalar denominator(0.), numeratorX(0.), numeratorY(0.), numeratorZ(0.), COMX, COMY, COMZ;
+
+		for (label cellI = 0; cellI < cellsNum; cellI++){
+	    		numeratorX += (1 - alpha[cellI]) * xCoord[cellI];
+	    		numeratorY += (1 - alpha[cellI]) * yCoord[cellI];
+	    		numeratorZ += (1 - alpha[cellI]) * zCoord[cellI];
+	    		denominator += (1 - alpha[cellI]);
+		}
+
+		// reduce for parallel running
+		reduce(numeratorX, sumOp<scalar>());
+		reduce(numeratorY, sumOp<scalar>());
+		reduce(numeratorZ, sumOp<scalar>());
+		reduce(denominator, sumOp<scalar>());
+		
+		COMX = numeratorX/denominator;
+		COMY = numeratorY/denominator;
+		COMZ = numeratorZ/denominator;
+
+		// This part calculates the value of the U field on the boundary
+		const fvPatch& boundaryPatch = patch();
+		const vectorField& Cf = boundaryPatch.Cf();
+		vectorField& field = *this;
+
+		const scalar Gdot = gdot; // value of the shear rate
+		const scalar Beta = beta; // value linked to the mixing index
+		const scalar L = 0.005; // value of the half-lenght of the domain
+
+		forAll(Cf, faceI)
+		{
+			const scalar x = Cf[faceI][0]; // .x();
+			const scalar y = Cf[faceI][1]; // .y();
+			const scalar z = Cf[faceI][2]; // .z();
+
+			field[faceI] = vector( Gdot*Beta*(y-COMY), (x-COMX)*Gdot, 0);
+		}
+
+		//operator == (field);
+
+	#};
+    }
+    
+    north
+    {
+	type		codedFixedValue;
+	value		uniform (0 0 0);
+
+	name	northProfile;
+
+	codeInclude
+	#{
+		#include "percorsodelcaso/input"
+		#include "fvCFD.H"
+		#include "fvMesh.H"
+		//#include "setRootCase.H"
+		//#include "createTime.H"
+		//#include "createMesh.H"
+	#};
+
+	codeOptions
+	#{
+    		-I$(LIB_SRC)/finiteVolume/lnInclude \
+    		-I$(LIB_SRC)/meshTools/lnInclude
+	#};
+
+	codeLibs
+	#{
+    		-lfiniteVolume \
+    		-lmeshTools
+	#};
+
+	code
+	#{
+		// This part calculate the centre of mass of the droplet
+		const volScalarField& alpha(db().objectRegistry::lookupObject<volScalarField>("alpha.water"));
+		// We don't have direct access to the mesh, so we use a workaround calling it from the field 
+		// alpha
+		const fvMesh& mesh(alpha.mesh());
+		const scalar& cellsNum(mesh.C().size());
+		const volScalarField xCoord(mesh.C().component(vector::X));
+		const volScalarField yCoord(mesh.C().component(vector::Y));
+		const volScalarField zCoord(mesh.C().component(vector::Z));
+
+        	scalar denominator(0.), numeratorX(0.), numeratorY(0.), numeratorZ(0.), COMX, COMY, COMZ;
+
+		for (label cellI = 0; cellI < cellsNum; cellI++){
+	    		numeratorX += (1 - alpha[cellI]) * xCoord[cellI];
+	    		numeratorY += (1 - alpha[cellI]) * yCoord[cellI];
+	    		numeratorZ += (1 - alpha[cellI]) * zCoord[cellI];
+	    		denominator += (1 - alpha[cellI]);
+		}
+
+		// reduce for parallel running
+		reduce(numeratorX, sumOp<scalar>());
+		reduce(numeratorY, sumOp<scalar>());
+		reduce(numeratorZ, sumOp<scalar>());
+		reduce(denominator, sumOp<scalar>());
+
+		COMX = numeratorX/denominator;
+		COMY = numeratorY/denominator;
+		COMZ = numeratorZ/denominator;
+
+		// This part calculates the value of the U field on the boundary
+		const fvPatch& boundaryPatch = patch();
+		const vectorField& Cf = boundaryPatch.Cf();
+		vectorField& field = *this;
+
+		const scalar Gdot = gdot; // value of the shear rate
+		const scalar Beta = beta; // value linked to the mixing index
+		const scalar L = 0.005; // value of the half-lenght of the domain
+
+		forAll(Cf, faceI)
+		{
+			const scalar x = Cf[faceI][0]; // .x();
+			const scalar y = Cf[faceI][1]; // .y();
+			const scalar z = Cf[faceI][2]; // .z();
+
+			field[faceI] = vector( Gdot*Beta*(y-COMY), Gdot*(x-COMX), 0);
+		}
+
+		//operator == (field);
+
+	#};
+    }
+    
+    south
+    {
+	type		codedFixedValue;
+	value		uniform (0 0 0);
+
+	name	southProfile;
+
+	codeInclude
+	#{
+		#include "percorsodelcaso/input"
+		#include "fvCFD.H"
+		#include "fvMesh.H"
+		//#include "setRootCase.H"
+		//#include "createTime.H"
+		//#include "createMesh.H"
+	#};
+
+	codeOptions
+	#{
+    		-I$(LIB_SRC)/finiteVolume/lnInclude \
+    		-I$(LIB_SRC)/meshTools/lnInclude
+	#};
+
+	codeLibs
+	#{
+    		-lfiniteVolume \
+    		-lmeshTools
+	#};
+
+	code
+	#{
+		// This part calculate the centre of mass of the droplet
+		const volScalarField& alpha(db().objectRegistry::lookupObject<volScalarField>("alpha.water"));
+		// We don't have direct access to the mesh, so we use a workaround calling it from the field 
+		// alpha
+		const fvMesh& mesh(alpha.mesh());
+		const scalar& cellsNum(mesh.C().size());
+		const volScalarField xCoord(mesh.C().component(vector::X));
+		const volScalarField yCoord(mesh.C().component(vector::Y));
+		const volScalarField zCoord(mesh.C().component(vector::Z));
+
+        	scalar denominator(0.), numeratorX(0.), numeratorY(0.), numeratorZ(0.), COMX, COMY, COMZ;
+
+		for (label cellI = 0; cellI < cellsNum; cellI++){
+	    		numeratorX += (1 - alpha[cellI]) * xCoord[cellI];
+	    		numeratorY += (1 - alpha[cellI]) * yCoord[cellI];
+	    		numeratorZ += (1 - alpha[cellI]) * zCoord[cellI];
+	    		denominator += (1 - alpha[cellI]);
+		}
+
+		// reduce for parallel running
+		reduce(numeratorX, sumOp<scalar>());
+		reduce(numeratorY, sumOp<scalar>());
+		reduce(numeratorZ, sumOp<scalar>());
+		reduce(denominator, sumOp<scalar>());
+
+		COMX = numeratorX/denominator;
+		COMY = numeratorY/denominator;
+		COMZ = numeratorZ/denominator;
+
+		// This part calculates the value of the U field on the boundary
+		const fvPatch& boundaryPatch = patch();
+		const vectorField& Cf = boundaryPatch.Cf();
+		vectorField& field = *this;
+
+		const scalar Gdot = gdot; // value of the shear rate
+		const scalar Beta = beta; // value linked to the mixing index
+		const scalar L = 0.005; // value of the half-lenght of the domain
+
+		forAll(Cf, faceI)
+		{
+			const scalar x = Cf[faceI][0]; // .x();
+			const scalar y = Cf[faceI][1]; // .y();
+			const scalar z = Cf[faceI][2]; // .z();
+
+			field[faceI] = vector( Gdot*Beta*(y-COMY), Gdot*(x-COMX), 0);
+		}
+
+		//operator == (field);
+
+	#};
+    }
+
+    frontAndBack
+    {
+        type            zeroGradient;
+    }
+}
+
+
+// ************************************************************************* //

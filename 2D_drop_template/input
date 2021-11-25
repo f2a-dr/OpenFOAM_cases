@@ -1,0 +1,9 @@
+/*-------------Calculation parameter-------------*/
+double beta=0;	 // Parametro campo di moto legato a MI
+double gdot=0.0052499999999999995;	 // shear rate
+
+/*-------------Information parameter-------------*/
+//double MI=0.5;	 // Mixing Index
+//double Ca=0.05;	 // capillary number
+//double We=2.1e-05;	 // Weber number
+//double Re=0.00041999999999999996;	 // Reynolds number

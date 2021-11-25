@@ -1,0 +1,20 @@
+#!/bin/bash
+
+#----------------Eliminazione file da run precedente----------------
+foamListTimes -rm
+rm -r dynamicCode
+rm  sim_logs/log.interFoam
+rm -r logs
+
+#----------------Avvio run attuale (single/parallel)----------------
+#interFoam > sim_logs/log.interFoam 2>&1
+decomposePar > sim_logs/log.decomposePar 2>&1
+mpirun -np 24 --bind-to none interFoam -parallel > sim_logs/log.interFoam 2>&1
+reconstructPar > sim_logs/log.reconstructPar 2>&1
+
+#----------------Estrazione log e rimozione file parallel-----------
+foamLog sim_logs/log.interFoam > /dev/null
+rm -r processor*
+#notify-send -u critical "Simulation completed in $(echo $(pwd))"
+#wall "Simulation completed in $(echo $(pwd))"
+

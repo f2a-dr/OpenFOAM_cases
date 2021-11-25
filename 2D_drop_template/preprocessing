@@ -1,0 +1,35 @@
+#!/bin/bash
+
+#---------Eliminazione file da run precedente----------
+rm -r constant/polyMesh
+rm 0/C*
+rm 0/'U(U)'
+rm 0/strainRate 
+rm 0/vorticity 
+rm 0/mixingIndex 
+rm 0/alpha.oil
+rm 0/grad*
+rm 0/alpha.water
+rm -r postProcessing
+rm sim_logs/log.blockMesh
+rm sim_logs/log.setFields
+
+#---------Inserimento percorso per file input---------- 
+# Il file di input deve essere richiamato nel file U e 
+# U.templ per il corretto funzionamento della boundary
+# codedFixedValue
+inputpath=$(realpath .)
+sed -i "s#percorsodelcaso#$inputpath#g" U.templ
+sed -i "s#numerocelleinterne#25600#g" U.templ
+
+#---------Inizializzazione campo di velocità----------- 
+cp U.templ 0/
+cd pythonScripts
+./calculate.sh
+cd ..
+cp 0/U.templ .
+rm 0/U.templ
+
+#---------Inizializzazione geometia e mesh------------
+blockMesh > sim_logs/log.blockMesh 2>&1
+setFields > sim_logs/log.setFields 2>&1

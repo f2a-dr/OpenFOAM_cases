@@ -1,0 +1,73 @@
+/*---------------------------------------------------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  8
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+Build  : 8-1c9b5879390b
+Exec   : blockMesh
+Date   : Jun 02 2021
+Time   : 00:47:34
+Host   : "multiscale4"
+PID    : 1765699
+I/O    : uncollated
+Case   : /home/fderoma/OpenFOAM/fderoma-8/run/3D/lambdaX4/MI_05_005
+nProcs : 1
+sigFpe : Enabling floating point exception trapping (FOAM_SIGFPE).
+fileModificationChecking : Monitoring run-time modified files using timeStampMaster (fileModificationSkew 10)
+allowSystemOperations : Allowing user-supplied system call operations
+
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+Create time
+
+Creating block mesh from
+    "system/blockMeshDict"
+Creating block edges
+No non-planar block faces defined
+Creating topology blocks
+Creating topology patches
+
+Creating block mesh topology
+
+Check topology
+
+	Basic statistics
+		Number of internal faces : 0
+		Number of boundary faces : 6
+		Number of defined boundary faces : 6
+		Number of undefined boundary faces : 0
+	Checking patch -> block consistency
+
+Creating block offsets
+Creating merge list .
+
+Creating polyMesh from blockMesh
+Creating patches
+Creating cells
+Creating points with scale 0.01
+    Block 0 cell size :
+        i : 0.0002 .. 0.0002
+        j : 0.0002 .. 0.0002
+        k : 0.0002
+
+Writing polyMesh
+----------------
+Mesh Information
+----------------
+  boundingBox: (-0.008 -0.008 -0.008) (0.008 0.008 0.008)
+  nPoints: 531441
+  nCells: 512000
+  nFaces: 1555200
+  nInternalFaces: 1516800
+----------------
+Patches
+----------------
+  patch 0 (start: 1516800 size: 6400) name: east
+  patch 1 (start: 1523200 size: 6400) name: west
+  patch 2 (start: 1529600 size: 6400) name: north
+  patch 3 (start: 1536000 size: 6400) name: south
+  patch 4 (start: 1542400 size: 12800) name: frontAndBack
+
+End
+

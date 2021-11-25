@@ -1,0 +1,6 @@
+beta = 0
+Ca = 0.05
+mu_w = 1e-1
+rho_w = 1000
+sigma = 2.1e-5
+a = 2e-3
